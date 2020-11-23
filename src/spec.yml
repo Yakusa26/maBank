@@ -1,0 +1,357 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Ma Bank
+  license:
+    name: MIT
+servers:
+  - url: 'http://petstore.swagger.io/v1'
+paths:
+  /register:
+    post:
+      summary: Permet à un client de la banque de créer son compte
+      operationId: register
+      tags:
+        - User Account
+      parameters:
+        - name: civility
+          in: query
+          description: Civilité du client
+          required: true
+          schema:
+            type: string
+            enum: [M.,Mme]
+        - name: firstname
+          in: query
+          description: Prénom du client
+          required: true
+          schema:
+            type: string
+        - name: lastname
+          in: query
+          description: Nom du client
+          required: true
+          schema:
+            type: string
+        - name: birthdate
+          in: query
+          description: Date de naissance du client
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: address
+          in: query
+          description: Adresse de résidence du client
+          required: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Adresse email du client
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: Mot de passe du client
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Les informations de connexion du compte créé
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /update:
+    put:
+      summary: Permet à un client de la banque de modifier son compte
+      operationId: updateAccount
+      tags:
+        - User Account
+      parameters:
+        - name: civility
+          in: query
+          description: Civilité du client
+          required: true
+          schema:
+            type: string
+            enum: [M.,Mme]
+        - name: firstname
+          in: query
+          description: Prénom du client
+          required: true
+          schema:
+            type: string
+        - name: lastname
+          in: query
+          description: Nom du client
+          required: true
+          schema:
+            type: string
+        - name: bithdate
+          in: query
+          description: Date de naissance du client
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: address
+          in: query
+          description: Adresse de résidence du client
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Les nouvelles informations du compte modifié
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /login:
+    get:
+      summary: Permet à un client de la banque de se connecter à son compte avant de pouvoir faire ses transactions
+      operationId: login
+      tags:
+        - User Account
+      parameters:
+        - name: accountnumber
+          in: query
+          description: Numéro du compte
+          required: true
+          schema:
+            type: string
+        - name: pin
+          in: query
+          description: Code pin du client
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Details about a user
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /logout:
+    get:
+      summary: Permet à un client de la banque de se connecter à son compte avant de pouvoir faire ses transactions
+      operationId: logout
+      tags:
+        - User Account
+      parameters:
+        - name: accountnumber
+          in: query
+          description: Numéro du compte
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: query
+          description: Token du client
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Details about a user
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /transaction:
+    put:
+      summary: Permet à un client de la banque de déposer ou de retirer de l'argent de son compte apès authentification
+      operationId: transaction
+      tags:
+        - Transactions
+      parameters:
+        - name: accountnumber
+          in: query
+          description: Numéro du compte
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          description: Date du jour
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: amount
+          in: query
+          description: Montant de la transaction
+          required: true
+          schema:
+            type: number
+            format: float
+      responses:
+        '200':
+          description: Les informations de connexion du compte créé
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solde'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /transfer:
+    post:
+      summary: Permet à un client de la banque de déposer ou de retirer de l'argent de son compte apès authentification
+      operationId: transfer
+      tags:
+        - Transactions
+      parameters:
+        - name: accountnumber
+          in: query
+          description: Numéro du compte
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          description: Date du jour
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: amount
+          in: query
+          description: Montant de la transaction
+          required: true
+          schema:
+            type: number
+            format: float
+      responses:
+        '200':
+          description: Les informations de connexion du compte créé
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - accountnumber
+        - pin
+      properties:
+        civility:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        birthdate:
+          type: string
+        address:
+          type: string
+        accountnumber:
+          type: string
+        pin:
+          type: string
+    Login:
+      type: object
+      required:
+        - accountnumber
+        - pin
+      properties:
+        accountnumber:
+          type: string
+        pin:
+          type: string
+    Token:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    Solde:
+      type: object
+      required:
+        - solde
+      properties:
+        solde:
+          type: string
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+          
