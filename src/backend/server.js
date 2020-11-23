@@ -75,17 +75,33 @@ app.post('/create', async (req, res) => {
       pin: pin
     };
     var find;
-    while (find) {
-      
-    }
-    console.log(request);
+    Users.find(
+        {'accountnumber': request.accountnumber}, 
+        async function(err, result) {
+        while (find) {
+          if (err) {
+            res.send(err);
+          } 
+          else {
+            if(result && result.length){
+              request.accountnumber = "16091" + randomize('0', 7) + randomize('A', 1)
+            }
+            else {
+              find  = false
+            }
+          }
+        }
+      })
     var mod = new Users(request);  
-        mod.save(function(err,data){  
+        mod.save(function(err, response){  
             if(err){  
                 res.send(err);                
             }  
-            else{        
-                res.send({data});  
+            else{      
+                response.pin = pin
+                console.log(response.pin)
+                console.log(response)
+                res.send({response});  
             }  
         });  
 }); 
