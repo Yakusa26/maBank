@@ -18,6 +18,9 @@ const UsersSchema = new Schema({
     birth: {
         type: String
       },
+    balance: {
+      type: Number
+    },
     accountnumber: {
       type: String
     },

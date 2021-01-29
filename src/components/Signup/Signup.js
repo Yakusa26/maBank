@@ -11,20 +11,24 @@ class Signup extends Component{
   constructor(props) {
     super(props);
     this.state = {
-      login: ''
+      login: '',
+      credentials: []
     }
   }
   submit = (values, actions) => {
     axios.post("http://localhost:4000/create/", values, { headers:{'Content-Type': 'application/json'}
     }).then(res => {
         console.log(res)
+        if (res)
+        {
+            this.setState({
+              credentials: res.data
+            })
+            console.log('Cred', this.state.credentials)
+        }
     })
     this.notify();
-    setTimeout(() => {
-      this.props.history.push({
-        pathname: '/login'
-      });
-    }, 2500);
+    console.log('Cred2', this.state.credentials)
   }
   notify = () => {  
     toast.success('Enregistrée avec succès', {
@@ -36,7 +40,8 @@ class Signup extends Component{
         return (
             <Formik
               onSubmit={this.submit}
-              initialValues={{email: '', 
+              initialValues={{
+                              email: '', 
                               nom: '',
                               prenom:'',
                               birth:'',
@@ -120,6 +125,8 @@ class Signup extends Component{
                                     </div>
                                     <div className="mb-3"> 
                                         <label ><Link to='/login'>Click here </Link>if you have already an account?</label> 
+                                        { this.state.credentials.length !== 0 ? <div style={{color: 'green'}}><label >Numéro de compte : {this.state.credentials.accountnumber}</label> 
+                                        <br/><label >Code PIN: {this.state.credentials.pin}</label></div> : null }
                                     </div>
                                     <button className="btn btn-lg btn-primary btn-block text-uppercase" type="submit">Sign up</button>
                                     <hr className="my-4"/> <button className="btn btn-lg btn-google btn-block text-uppercase" type="submit"><i className="fa fa-google mr-2"></i> Sign in with Google</button> <button className="btn btn-lg btn-facebook btn-block text-uppercase" type="submit"><i className="fa fa-facebook-f mr-2"></i> Sign in with Facebook</button>

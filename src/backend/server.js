@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const PORT = 4000;
+const PORT = 5000;
 const mongoose = require("mongoose");
 const {Users} = require("./models");
 app.use(cors());
@@ -18,6 +18,8 @@ const signatureFunction = crypto.createSign('RSA-SHA256');
 const verifyFunction = crypto.createVerify('RSA-SHA256');
 const base64 = require('base64url');
 var randomize = require('randomatic');
+const axios = require('axios');
+
 
 
 
@@ -64,16 +66,19 @@ async function verify(hashedText, plainText){
   return match
 }
 app.post('/create', async (req, res) => { 
-  var pin = await hash(randomize('0', 4));
+  var pinClair = randomize('0', 4);
+  var pin = await hash(pinClair);
   var request = { 
       nom: req.body.nom,
       prenom: req.body.prenom,
       civility: req.body.civility,
       birth: req.body.birth,
       email: req.body.email,
+      balance: 200,
       accountnumber: "16091" + randomize('0', 7) + randomize('A', 1),
       pin: pin
     };
+    console.log(req)
     var find;
     Users.find(
         {'accountnumber': request.accountnumber}, 
@@ -98,42 +103,83 @@ app.post('/create', async (req, res) => {
                 res.send(err);                
             }  
             else{      
-                response.pin = pin
-                console.log(response.pin)
-                console.log(response)
-                res.send({response});  
-            }  
-        });  
-}); 
-router.route("/apibank/create")
-  .post( async function(req, res) { 
-    var request = {
-      nom: req.body.nom,
-      prenom: req.body.prenom,
-      civility: req.body.civility,
-      birth: req.body.birth,
-      email: req.body.email,
-      accountnumber: "16091" + randomize('0', 7) + randomize('A', 1),
-      pin: await hash(randomize('0', 4))
-    };
-    console.log(req.body);
-    console.log(request);
-    var mod = new Users(request);  
-        mod.save(function(err, response){  
-            if(err){  
-                res.send(err);                
-            }  
-            else{        
-                res.send({response});  
-            }  
-        });  
-}); 
 
- router.route("/login")
+                var credentials = {
+                  pin : pinClair,
+                  accountnumber: response.accountnumber
+                }
+                res.send(credentials);  
+            }  
+        });  
+}); 
+app.post('/transfer', async (req, res) => { 
+  var updateCredit = { 
+      $inc: { balance: req.body.amount }
+    };
+  var updateDebit = { 
+    $inc: { balance: -req.body.amount }
+  };
+  let solde;
+    Users.find(
+      {
+        accountnumber: req.body.source_account
+      }, 
+      function(err, result) {
+        if (err) {
+          res.send(err);
+        } else {
+          solde = result[0].balance;
+          var bankCodeDestination = req.body.destination_account.substring(0,5);
+          var bankCodesource = req.body.source_account.substring(0,5);
+          if (bankCodesource == bankCodeDestination && solde >= req.body.amount) 
+          {
+            Users.findOneAndUpdate({accountnumber: req.body.source_account}, 
+              updateDebit,   
+              function(err, data) {  
+                if (err) {  
+                  res.send(err);
+                  console.log("Error:", err)  
+                  return;  
+                }  
+                console.log("Success")
+            });
+            Users.findOneAndUpdate({accountnumber: req.body.destination_account}, 
+              updateCredit,   
+              function(err, data) {  
+                if (err) {  
+                  res.send(err);
+                  console.log("Error:", err)  
+                  return;  
+                }  
+                res.send({data});
+                console.log("Success")
+            });   
+            console.log('Virement interne');
+          }
+          else if (solde >= req.body.amount)
+          {
+            console.log('Virement externe');
+            let auth = req.headers.authorization;
+            const authSplit = auth.split(' ');
+            var token = authSplit[1];
+            const tokenSplit = token.split('.');
+            const headerInBase64UrlFormat = tokenSplit[0];
+            const payloadInBase64UrlFormat = tokenSplit[1];
+            const signatureInBase64UrlFormat = tokenSplit[2];
+            var header = base64.decode(headerInBase64UrlFormat)
+            var payload = base64.decode(payloadInBase64UrlFormat)
+            console.log('Header ', header);
+            console.log('Payload ', payload);
+          }
+        }
+    });
+}); 
+ router.route('/login')
   .get( function(req, res) {
-      var request = {};
-      request["email"] = req.query.email;
-      console.log(request)
+    console.log(req)
+    var request = { 
+      nom: req.body.accountNumber
+    };
       Users.find(
           request, 
           async function(err, result) {
@@ -141,7 +187,7 @@ router.route("/apibank/create")
             res.send(err);
           } else {
             if(result && result.length){
-              var match = await verify(result[0].pass, req.query.pass)
+              var match = await verify(result[0].pin, req.body.pin)
               if (match) {
 
                 const header = {
@@ -165,9 +211,9 @@ router.route("/apibank/create")
 
                 base64dataPayload = base64.fromBase64(base64dataPayload);
 
-                let headerClaims = base64dataHeader+ '.' + base64dataPayload
+                let headerAndClaims = base64dataHeader+ '.' + base64dataPayload
 
-                signatureFunction.write(headerClaims);
+                signatureFunction.write(headerAndClaims);
                 signatureFunction.end();
 
                 const PRIV_KEY = fs.readFileSync(__dirname + '/id_rsa_priv.pem', 'utf8');
@@ -176,11 +222,8 @@ router.route("/apibank/create")
                 let signatureBase64 = signatureFunction.sign(PRIV_KEY, 'base64');
                 
                 signatureBase64 = base64.fromBase64(signatureBase64);
-
-                console.log(signatureBase64);
-
                 
-                let token = headerClaims + '.' + signatureBase64;
+                var token = headerAndClaims + '.' + signatureBase64;
 
                 const jwtParts = token.split('.');
                 const headerInBase64UrlFormat = jwtParts[0];
@@ -196,10 +239,9 @@ router.route("/apibank/create")
                 console.log(signatureInBase64);
                 console.log(signatureIsValid);
 
-                res.send(match);
+                res.send(token);
               }
               else {
-                console.log(match)
                 res.send(match);
               }
             }

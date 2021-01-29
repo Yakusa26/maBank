@@ -4,6 +4,7 @@ import {Link} from 'react-router-dom';
 import './Login.css'
 import {toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import * as axios from 'axios';
 toast.configure();
 
 
@@ -31,32 +32,26 @@ class Login extends Component{
   } 
   
    submit = (values, actions) => {
-    const data = '?' + Object.keys(values).map(k => `${k}=${values[k]}&`).join('');
-    const completQuery = 'http://localhost:4000/login/' + data;
-    this.props.verifyPassword(completQuery)
-      .then((res) => {
-      this.setState({
-        login: res
-      });
-      let message
-      if (res) {
-        message = 'Informations de connexion correctes'
-      }
-      else {
-        message = 'Adresse mail ou mot de passe incorrect'
-      }
-      this.notify(message, res)
-      values.pass = ''
-    });
+    axios.get("http://localhost:4000/login/", values, { headers:{'Content-Type': 'application/json'}
+    }).then(res => {
+        console.log(res)
+        let message
+        if (res) {
+          message = 'Informations de connexion correctes'
+        }
+        else {
+          message = 'Adresse mail ou mot de passe incorrect'
+        }
+        this.notify(message, res)
+    })
   }
-  
 
     render() {
         return (
             <Formik
               onSubmit={this.submit}
-              initialValues={{email: '', 
-                                pass: ''}}
+              initialValues={{accountNumber: '', 
+                                pin: ''}}
             >
               {({ handleSubmit, handleChange, handleBlur, values, isSubmitting }) => (
                 <div className="container">
@@ -68,12 +63,11 @@ class Login extends Component{
                                 <form className="form-signin" onSubmit={handleSubmit}>
                                     <div className="form-label-group"> 
                                         <input 
-                                            type="email" 
-                                            id="inputEmail" 
-                                            name='email'
-                                            placeholder="Email address" 
+                                            type="text" 
+                                            name='accountNumber'
+                                            placeholder="Account Number" 
                                             required 
-                                            value={values.email} 
+                                            value={values.accountNumber} 
                                             className="form-control"
                                             onChange = {handleChange} 
                                             onBlur={handleBlur}  
@@ -83,10 +77,10 @@ class Login extends Component{
                                         <input type="password" 
                                             id="inputPassword" 
                                             className="form-control" 
-                                            placeholder="Password" 
+                                            placeholder="PIN code" 
                                             required
-                                            name="pass" 
-                                            value={values.pass} 
+                                            name="pin" 
+                                            value={values.pin} 
                                             onChange = {handleChange} 
                                             onBlur={handleBlur} 
                                         /> 
