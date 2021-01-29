@@ -89,7 +89,7 @@ app.post('/create', async (req, res) => {
           } 
           else {
             if(result && result.length){
-              request.accountnumber = "16091" + randomize('0', 7) + randomize('A', 1)
+              request.accountnumber = "16091" + randomize('0', 7) + randomize('A', 1) // Identifiant de ma banque oublié
             }
             else {
               find  = false
